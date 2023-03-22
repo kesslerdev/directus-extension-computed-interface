@@ -2,8 +2,8 @@ import { defineInterface } from '@directus/extensions-sdk';
 import InterfaceComponent from './interface.vue';
 
 export default defineInterface({
-	id: 'computed',
-	name: 'Computed',
+	id: 'formulas',
+	name: 'Formulas',
 	icon: 'calculate',
 	description: 'Perform computed value based on other fields',
 	component: InterfaceComponent,
@@ -11,12 +11,15 @@ export default defineInterface({
 	group: 'other',
 	options: [
 		{
-			field: 'template',
-			name: 'Template',
+			field: 'formula',
+			name: 'Formula',
 			type: 'string',
 			meta: {
 				width: 'full',
-				interface: 'input',
+				interface: 'input-code',
+				options: {
+					language: 'javascript',
+				},
 			},
 		},
 		{

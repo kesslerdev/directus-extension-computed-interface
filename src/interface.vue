@@ -18,7 +18,7 @@
 
 <script lang="ts">
 import { ComputedRef, defineComponent, inject, ref, watch } from 'vue';
-import { parseExpression } from './operations';
+import { compileFormula } from './operations';
 import { useDeepValues, useCollectionRelations } from './utils';
 import { useCollection } from '@directus/extensions-sdk';
 
@@ -44,7 +44,7 @@ export default defineComponent({
 			type: [String, Number],
 			default: '',
 		},
-		template: {
+		formula: {
 			type: String,
 			default: '',
 		},
@@ -67,16 +67,18 @@ export default defineComponent({
 	},
 	emits: ['input'],
 	setup(props, { emit }) {
-		const defaultValues = useCollection(props.collection).defaults
+		const defaultValues = useCollection(props.collection).defaults.value;
+		const fields = useCollection(props.collection).fields.value.reduce((acc, cur) =>({...acc, [cur.field]: defaultValues[cur.field] || null}), {});
 		const computedValue = ref<string | number | null>(props.value);
 		const relations = useCollectionRelations(props.collection);
+		const compiledFormula = compileFormula(props.formula);
 		const values = useDeepValues(
 			inject<ComputedRef<Record<string, any>>>('values')!,
 			relations,
 			props.collection,
 			props.field,
 			props.primaryKey,
-			props.template
+			props.formula
 		);
 		const errorMsg = ref<string | null>(null);
 
@@ -89,7 +91,9 @@ export default defineComponent({
 					return;
 				}
 				if (newValue !== props.value) {
-					emit('input', newValue);
+					setTimeout(() => {
+						emit('input', newValue);
+					},1)
 				}
 			});
 		}
@@ -101,10 +105,7 @@ export default defineComponent({
 
 		function compute() {
 			try {
-				const res = props.template.replace(/{{.*?}}/g, (match) => {
-					const expression = match.slice(2, -2).trim();
-					return parseExpression(expression, values.value, defaultValues.value);
-				});
+				const res = compiledFormula({...fields, ...values.value})
 
 				errorMsg.value = null;
 

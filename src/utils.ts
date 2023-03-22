@@ -1,16 +1,20 @@
 import { watch, ref, computed } from 'vue';
+import { parse } from 'mathjs';
 import type { Ref } from 'vue';
 import { useApi, useStores } from '@directus/extensions-sdk';
 import { Relation } from '@directus/shared/types';
 
-export function checkFieldInTemplate(template: string, field: string) {
-	const matches = template.match(/{{.*?}}/g);
-	return (matches || []).some((m) => m.includes(field));
+export function checkFieldInFormula(parsedFormula: math.MathNode, field: string) {
+	const names = parsedFormula
+		.filter((node) => node.isSymbolNode)
+		.map(n => n.name);
+
+	return names.includes(field);
 }
 
 /** Simple check which fields are used */
 function shouldUpdate(
-	template: string,
+	parsedFormula: math.MathNode,
 	computedField: string,
 	val: Record<string, any>,
 	oldVal: Record<string, any>,
@@ -24,7 +28,7 @@ function shouldUpdate(
 	for (const key of Object.keys({ ...oldVal, ...val })) {
 		if (
 			key !== computedField &&
-			checkFieldInTemplate(template, key) &&
+			checkFieldInFormula(parsedFormula, key) &&
 			val[key] !== oldVal[key] &&
 			JSON.stringify(val[key]) !== JSON.stringify(oldVal[key])
 		) {
@@ -52,13 +56,15 @@ export const useDeepValues = (
 	collection: string,
 	computedField: string,
 	pk: string | number,
-	template: string
+	formula: string
 ) => {
 	const api = useApi();
 	const { currentUser } = useStores().useUserStore();
 	const finalValues = ref<Record<string, any>>({});
 	let fieldCache: Record<string, any> = {};
 	let itemCache: Record<string, any> = {};
+
+	const parsedFormula = parse(formula);
 	// Directus store o2m value as reference so when o2m updated, val & oldVal in watch are the same.
 	// This will serialize values so when o2m fields are updated, their changes can be seen.
 	const cloneValues = computed(() => JSON.stringify(
@@ -71,7 +77,7 @@ export const useDeepValues = (
 		async (val, oldVal) => {
 			const valObj = JSON.parse(val);
 			const oldValObj = oldVal !== undefined ? JSON.parse(oldVal) : {};
-			if (!shouldUpdate(template, computedField, valObj, oldValObj, pk)) {
+			if (!shouldUpdate(parsedFormula, computedField, valObj, oldValObj, pk)) {
 				return;
 			}
 
@@ -87,7 +93,7 @@ export const useDeepValues = (
 			for (const key of Object.keys(valObj)) {
 				const relation = relations.value.find((rel) => [rel.meta?.one_field, rel.meta?.many_field].includes(key));
 
-				if (!relation || !checkFieldInTemplate(template, key)) {
+				if (!relation || !checkFieldInFormula(parsedFormula, key)) {
 					continue;
 				}
 
@@ -199,16 +205,4 @@ export const useDeepValues = (
 	);
 
 	return finalValues;
-};
-
-export const findValueByPath = (obj: Record<string, any>, path: string) => {
-	let value = obj;
-	for (const i of path.split('.')) {
-		if (i in value) {
-			value = value[i];
-		} else {
-			return { value: null, found: false };
-		}
-	}
-	return { value, found: true };
 };
