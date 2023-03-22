@@ -50,6 +50,7 @@ interface IRelationUpdate {
 	delete?: (string | number)[];
 }
 
+const vals : Record<string,Ref<Record<string, any>>> = {}
 export const useDeepValues = (
 	values: Ref<Record<string, any>>,
 	relations: Ref<Relation[]>,
@@ -196,7 +197,11 @@ export const useDeepValues = (
 				relationalData[key] = isM2O ? arrayOfData[0] : arrayOfData;
 			}
 
-			finalValues.value = { ...valObj, ...relationalData, __currentUser: currentUser };
+			finalValues.value = { ...valObj, ...relationalData, __currentUser: currentUser, __parents: vals };
+
+			if(collection.length) {
+				vals[collection] = finalValues.value
+			}
 		},
 		{
 			deep: false,
@@ -206,3 +211,7 @@ export const useDeepValues = (
 
 	return finalValues;
 };
+
+export const removeCollectionFromCache = (collection:string) => {
+	delete vals[collection]
+}

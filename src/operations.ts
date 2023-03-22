@@ -5,8 +5,9 @@ const math = create(all);
 function aSum(args, math, scope) {
 	try {
 		const el = args[0].compile().evaluate(scope)
+		const expr = args[1].compile()
+		const result = math.sum(el.map(i => expr.evaluate(i)))
 
-		const result = math.sum(el.map(i => i[args[1].name]))
 		return result || 0
 	} catch (error) {
 		console.error(error)
@@ -61,9 +62,11 @@ export function compileFormula(exp: string): any {
 
 	return (values:Object) => {
 		const scope = {
+			'$CURRENT_USER': values['__currentUser'],
+			'$PARENTS': values['__parents'],
 			...values
 		};
-		console.log(values)
+		console.log(scope)
 
 		return compiled.evaluate(scope);
 	}

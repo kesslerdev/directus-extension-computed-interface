@@ -19,7 +19,7 @@
 <script lang="ts">
 import { ComputedRef, defineComponent, inject, ref, watch } from 'vue';
 import { compileFormula } from './operations';
-import { useDeepValues, useCollectionRelations } from './utils';
+import { useDeepValues, useCollectionRelations, removeCollectionFromCache } from './utils';
 import { useCollection } from '@directus/extensions-sdk';
 
 export default defineComponent({
@@ -122,5 +122,11 @@ export default defineComponent({
 			}
 		}
 	},
+	unmounted() {
+		if(this._.props.collection.length) {
+			removeCollectionFromCache(this._.props.collection)
+		}
+		
+	}
 });
 </script>
