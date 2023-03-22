@@ -1,6 +1,6 @@
 {
-	"name": "directus-extension-computed-interface",
-	"version": "1.4.1",
+	"name": "directus-extension-formula-interface",
+	"version": "1.0.0",
 	"description": "Perform computed value based on other fields",
 	"author": {
 		"email": "duydvu98@gmail.com",
@@ -9,7 +9,7 @@
 	"license": "gpl-3.0",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/rezo-labs/directus-extension-computed-interface.git"
+		"url": "https://github.com/kesslerdev/directus-extension-formula-interface.git"
 	},
 	"keywords": [
 		"directus",
