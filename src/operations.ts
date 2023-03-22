@@ -66,7 +66,6 @@ export function compileFormula(exp: string): any {
 			'$PARENTS': values['__parents'],
 			...values
 		};
-		console.log(scope)
 
 		return compiled.evaluate(scope);
 	}

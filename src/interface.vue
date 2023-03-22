@@ -105,7 +105,13 @@ export default defineComponent({
 
 		function compute() {
 			try {
-				const res = compiledFormula({...fields, ...values.value})
+				const scope = values.value;
+				Object.entries(fields).forEach(([k,v])=> {
+					if(!scope[k] && v) {
+						scope[k] = v
+					}
+				})
+				const res = compiledFormula({...fields, ...scope})
 
 				errorMsg.value = null;
 
